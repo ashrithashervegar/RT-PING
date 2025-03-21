@@ -1,8 +1,10 @@
 name: oidc-poc
+
 on:
     push:
         branches:
             - '*'
+
 jobs:
     auth:
         permissions:
@@ -10,48 +12,27 @@ jobs:
             id-token: write
         runs-on: ubuntu-latest
         steps:
-            # Step 1: Install JFrog CLI
-            - name: Set up JFrog CLI
-              run: |
-                    # Install JFrog CLI
-                    curl -fL https://getcli.jfrog.io | sh
-                    sudo mv jfrog /usr/local/bin
-
-            # Step 2: Get ID Token
             - name: Get id token
               run: |
                     ID_TOKEN=$(curl -sLS -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
                     "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=jfrog-github" | jq .value | tr -d '"')
                     echo "ID_TOKEN=${ID_TOKEN}" >> $GITHUB_ENV
-            
-            # Step 3: Exchange Token for Access Token
-            - name: Exchange token with access
-              env:
-                    ID_TOKEN: ${{env.ID_TOKEN}}
-                    JFROG_PLATFORM_URL: https://hts2.jfrog.io
-              run: |
-                    ACCESS_TOKEN=$(curl -XPOST -H "Content-Type: application/json" "https://hts2.jfrog.io/access/api/v1/oidc/token" -d "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\", \"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\", \"subject_token\": \"${ID_TOKEN}\", \"provider_name\": \"ashritha\"}" | jq .access_token | tr -d '"')
-                    echo "ACCESS_TOKEN=${ACCESS_TOKEN}" >> $GITHUB_ENV
-            
-            # Step 4: List Token (optional, for verification)
-            - name: List token
-              env:
-                    OIDC_AUDIENCE: "jfrog-github"
-                    OIDC_PROVIDER: "ashritha"
-                    ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
-              run: |
-                     RESPONSE=$(curl -s -o response.json -w "%{http_code}" -X POST -H "Content-type: application/json" https://hts2.jfrog.io/access/api/v1/oidc/token -d \ "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\",\"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\",\"subject_token\": \"${{ env.ID_TOKEN }}\",\"provider_name\": \"${{ env.OIDC_PROVIDER }}\"}")
-                     echo "API Response:"
-                     echo "$RESPONSE"
+                    echo "$ID_TOKEN"
 
-            # Step 5: Configure JFrog CLI
-            - name: Configure JFrog CLI
+            - name: Install JFrog CLI
               run: |
-                    # Configure JFrog CLI with the URL and access token
-                    jfrog rt config --url=https://hts2.jfrog.io --apikey=${{ env.ACCESS_TOKEN }}
+                    curl -fL https://getcli.jfrog.io | sh
+                    sudo mv jfrog /usr/local/bin/
 
-            # Step 6: Ping JFrog platform using JFrog CLI
-            - name: Ping JFrog platform using JFrog CLI
+            - name: Configure JFrog CLI with OIDC Token
+              env:
+                 ID_TOKEN: ${{ env.ID_TOKEN }}
               run: |
-                    echo "Pinging JFrog platform at https://hts2.jfrog.io using JFrog CLI..."
-                    jfrog rt ping
+                    # Set the Artifactory URL and use OIDC token for authentication
+                    jfrog config add my-artifactory --url https://server.jfrog.io/artifactory --access-token $ID_TOKEN
+                    jfrog config show
+
+            - name: Ping Artifactory API with JFrog CLI (jf rt ping)
+              run: |
+                    echo "Pinging Artifactory using JFrog CLI..."
+                    jfrog rt ping --url https://sever.jfrog.io/artifactory
