@@ -33,38 +33,14 @@ jobs:
                      RESPONSE=$(curl -s -o response.json -w "%{http_code}" -X POST -H "Content-type: application/json" https://hts2.jfrog.io/access/api/v1/oidc/token -d \ "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\",\"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\",\"subject_token\": \"${{ env.ID_TOKEN }}\",\"provider_name\": \"${{ env.OIDC_PROVIDER }}\"}")
                      echo "API Response:"
                      echo "$RESPONSE"
-            
-            # Create a .txt file locally
-            - name: Create .txt file
-              run: |
-                echo "This is a dynamically created text file with some content" > my-file1.txt
-            # Upload .txt file to JFrog Artifactory using curl
-            - name: Upload .txt file to JFrog Artifactory using curl
-              env:
-                JFROG_URL: https://hts2.jfrog.io
-                ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
-              run: |
-                # Define file path and repository details
-                FILE_PATH="my-file1.txt"
-                REPO="ashrithatest-npm-local"
-                TARGET_PATH="my-file1.txt"  # The path where the file will be stored in Artifactory (can be a folder inside the repo)
-                # Upload the file using curl
-                curl -X PUT "$JFROG_URL/artifactory/$REPO/$TARGET_PATH" \
-                  -H "Authorization: Bearer $ACCESS_TOKEN" \
-                  -H "Content-Type: application/octet-stream" \
-                  --data-binary @"$FILE_PATH"
-            # Download the uploaded file from JFrog Artifactory using curl
-            - name: Download uploaded .txt file from JFrog Artifactory using curl
-              env:
-                ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
-                JFROG_URL: https://hts2.jfrog.io
-              run: |
-                # Define repository and file path to be downloaded
-                REPO="ashrithatest-npm-local"
-                FILE_PATH="my-file1.txt"  # The file to download
-                LOCAL_FILE_PATH="downloaded-my-file1.txt"  # Path to save the downloaded file locally
-                # Use curl to download the file
-                curl -H "Authorization: Bearer ${ACCESS_TOKEN}" -X GET "$JFROG_URL/artifactory/$REPO/$FILE_PATH" -o "$LOCAL_FILE_PATH" -vvv
-                # Verify the downloaded file
-                ls -l "$LOCAL_FILE_PATH"
 
+            - name: Ping JFrog platform
+              run: |
+                    echo "Pinging JFrog platform at https://hts2.jfrog.io..."
+                    PING_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" https://hts2.jfrog.io)
+                    if [ "$PING_RESPONSE" -eq 200 ]; then
+                        echo "Successfully pinged JFrog platform. Response code: $PING_RESPONSE"
+                    else
+                        echo "Failed to ping JFrog platform. Response code: $PING_RESPONSE"
+                        exit 1
+                    fi
