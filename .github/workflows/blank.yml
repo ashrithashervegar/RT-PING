@@ -29,7 +29,7 @@ jobs:
                  ID_TOKEN: ${{ env.ID_TOKEN }}
               run: |
                     # Set the Artifactory URL and use OIDC token for authentication
-                    jfrog config add my-artifactory --url https://server.jfrog.io/artifactory --access-token $ID_TOKEN
+                    jfrog config add my-artifactory --url https://hts2.jfrog.io/artifactory --access-token $ID_TOKEN
                     jfrog config show
 
             - name: Ping Artifactory API with JFrog CLI (jf rt ping)
