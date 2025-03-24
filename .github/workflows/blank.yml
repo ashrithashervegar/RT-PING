@@ -27,7 +27,6 @@ jobs:
             - name: List token
               env:
                     OIDC_AUDIENCE: "jfrog-github"
-                    OIDC_PROVIDER: "ashritha"
                     ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
               run: |
                      RESPONSE=$(curl -s -o response.json -w "%{http_code}" -X POST -H "Content-type: application/json" https://hts2.jfrog.io/access/api/v1/oidc/token -d \ "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\",\"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\",\"subject_token\": \"${{ env.ID_TOKEN }}\",\"provider_name\": \"${{ env.OIDC_PROVIDER }}\"}")
@@ -37,7 +36,7 @@ jobs:
             # Create a .txt file locally
             - name: Create .txt file
               run: |
-                echo "This is a dynamically created text file with some content" > my-file.txt
+                echo "This is a dynamically created text file with some content" > my-file24.txt
             # Upload .txt file to JFrog Artifactory using curl
             - name: Upload .txt file to JFrog Artifactory using curl
               env:
@@ -45,9 +44,9 @@ jobs:
                 ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
               run: |
                 # Define file path and repository details
-                FILE_PATH="my-file.txt"
+                FILE_PATH="my-file24.txt"
                 REPO="ashrithatest-npm-local"
-                TARGET_PATH="my-file.txt"  # The path where the file will be stored in Artifactory (can be a folder inside the repo)
+                TARGET_PATH="my-file24.txt"  # The path where the file will be stored in Artifactory (can be a folder inside the repo)
                 # Upload the file using curl
                 curl -X PUT "$JFROG_URL/artifactory/$REPO/$TARGET_PATH" \
                   -H "Authorization: Bearer $ACCESS_TOKEN" \
