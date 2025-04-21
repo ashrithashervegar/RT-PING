@@ -19,9 +19,9 @@ jobs:
             - name: Exchange token with access
               env:
                     ID_TOKEN: ${{env.ID_TOKEN}}
-                    JFROG_PLATFORM_URL: https://hts2.jfrog.io
+                    JFROG_PLATFORM_URL: https://mill.jfrog.info:12195/
               run: |
-                    ACCESS_TOKEN=$(curl -XPOST -H "Content-Type: application/json" "https://hts2.jfrog.io/access/api/v1/oidc/token" -d "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\", \"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\", \"subject_token\": \"${ID_TOKEN}\", \"provider_name\": \"ashritha\"}" | jq .access_token | tr -d '"')
+                    ACCESS_TOKEN=$(curl -XPOST -H "Content-Type: application/json" "https://mill.jfrog.info:12195/access/api/v1/oidc/token" -d "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\", \"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\", \"subject_token\": \"${ID_TOKEN}\", \"provider_name\": \"ashritha\"}" | jq .access_token | tr -d '"')
                     echo "ACCESS_TOKEN=${ACCESS_TOKEN}" >> $GITHUB_ENV
             
             - name: List token
@@ -30,7 +30,7 @@ jobs:
                     OIDC_PROVIDER: "ashritha"
                     ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
               run: |
-                     RESPONSE=$(curl -s -o response.json -w "%{http_code}" -X POST -H "Content-type: application/json" https://hts2.jfrog.io/access/api/v1/oidc/token -d \ "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\",\"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\",\"subject_token\": \"${{ env.ID_TOKEN }}\",\"provider_name\": \"${{ env.OIDC_PROVIDER }}\"}")
+                     RESPONSE=$(curl -s -o response.json -w "%{http_code}" -X POST -H "Content-type: application/json" https://mill.jfrog.info:12195/access/api/v1/oidc/token -d \ "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\",\"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\",\"subject_token\": \"${{ env.ID_TOKEN }}\",\"provider_name\": \"${{ env.OIDC_PROVIDER }}\"}")
                      echo "API Response:"
                      echo "$RESPONSE"
             
@@ -41,7 +41,7 @@ jobs:
             # Upload .txt file to JFrog Artifactory using curl
             - name: Upload .txt file to JFrog Artifactory using curl
               env:
-                JFROG_URL: https://hts2.jfrog.io
+                JFROG_URL: https://mill.jfrog.info:12195/
                 ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
               run: |
                 # Define file path and repository details
@@ -57,7 +57,7 @@ jobs:
             - name: Download uploaded .txt file from JFrog Artifactory using curl
               env:
                 ACCESS_TOKEN: ${{ env.ACCESS_TOKEN }}
-                JFROG_URL: https://hts2.jfrog.io
+                JFROG_URL: https://mill.jfrog.info:12195/
               run: |
                 # Define repository and file path to be downloaded
                 REPO="ashrithatest-npm-local"
